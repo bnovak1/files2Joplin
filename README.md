@@ -1,5 +1,5 @@
 # files2Joplin
-Create a RAW directory for import into Joplin using the files in an given attachment directory.
+Create a RAW directory for import into Joplin using the files in a given attachment directory.
 Sub-directories are ignored.
 The RAW directory is named joplin and is created as a sub-directory of the attachment directory.
 One note is created for each file where the file name not including the extension is the title and
