@@ -6,5 +6,7 @@ One note is created for each file where the file name not including the extensio
 the body consists of only a link to the attached file.
 
 Command line inputs:
-1) The Joplin directory is needed to check if randomly generated file names already exist.
-2) The attachment directory with the files to add to the RAW directory.
+1) The absolute path for the Joplin directory.
+   It is the directory you are syncing to, not the local directory.
+   This is needed to check if randomly generated file names already exist.
+2) The absolute path for the attachment directory with the files to add to the RAW directory.
