@@ -12,6 +12,7 @@ Command line inputs:
 
 from datetime import datetime, timezone
 import glob
+import mimetypes
 import os
 import shutil
 import sys
@@ -42,7 +43,7 @@ for file in file_list:
 
     # Attachment file name and extension
     split = file.split('.')
-    extension = split[-1]
+    extension = '.' + split[-1]
     file_name = '.'.join(split[:-1])
 
     # Attachment file size
@@ -56,9 +57,7 @@ for file in file_list:
         rand_attach = os.urandom(16).hex()
 
     # Move attachment to RAW directory.
-    # Extension here is mainly for testing purposes.
-    # Attachments in Joplin don't have extensions and extension seems to be ignored on import.
-    shutil.move(file, 'joplin/resources/' + rand_attach + '.' + extension)
+    shutil.move(file, 'joplin/resources/' + rand_attach)
 
     # Write markdown file
     with open('joplin/' + rand_attach + '.md', 'w') as f:
@@ -66,12 +65,12 @@ for file in file_list:
         f.write(file + '\n\n')
         f.write('id: ' + rand_attach + '\n')
 
-        if extension == 'pdf':
-            f.write('mime: application/pdf\n')
-        elif extension == 'txt':
-            f.write('mime: text/plain\n')
-        else:
-            f.write('mime: \n')
+        try:
+            mimetype = mimetypes.types_map[extension]
+        except KeyError:
+            mimetype = ''
+
+        f.write('mime: ' + mimetype + '\n')
 
         f.write('filename: ' + file + '\n')
 
@@ -93,15 +92,19 @@ for file in file_list:
 
     # Random markdown file name
     rand_md = os.urandom(16).hex()
-    while os.path.exists(joplin_directory + '/' + rand_attach + '.md'):
+    while os.path.exists(joplin_directory + '/' + rand_md + '.md'):
         rand_md = os.urandom(16).hex()
 
     # Write markdown file
     with open('joplin/' + rand_md + '.md', 'w') as f:
 
-        # Title and link to attachment
+        # Title and link to attachment.
+        # Image types which will display in Joplin are given image links.
         f.write(file_name + '\n\n')
-        f.write('[' + file + '](:/' + rand_attach + ')\n\n')
+        if extension in ['.png', '.jpeg', '.jpg']:
+            f.write('![' + file + '](:/' + rand_attach + ')\n\n')
+        else:
+            f.write('[' + file + '](:/' + rand_attach + ')\n\n')
 
         # Other data
         f.write('id: ' + rand_md + '\n')
