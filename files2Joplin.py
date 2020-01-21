@@ -13,9 +13,9 @@ Command line inputs:
 
 **WARNING: If you plan on editing attachments, you should check that Joplin actually syncs
 attachments after they are edited before using this. I have had problems with that in
-Joplin 1.0.175. If your attachments are not syncing after editing, an alternative would be to link
-to the files directly using file:// in front of the file paths. I may add an option for this if the
-next version of Joplin does not fix this.**
+Joplin 1.0.175 & 1.0.178. If your attachments are not syncing after editing, an alternative would
+be to link to the files directly using file:// in front of the file paths. I may add an option for
+this if Joplin does not fix this.**
 '''
 
 from datetime import datetime, timezone
@@ -42,11 +42,13 @@ def split_file_name(file):
 def write_attachment_file(file, rand_attach, now):
     '''
     Move attachment to RAW directory. Write attachment markdown file.
-    Inputs:
-        file: Attachment File name before adding to Joplin
-        rand_attach: Attachment file name after adding to Joplin
-        extension: Attachment file extension
-        now: Current date & time
+
+    Inputs
+    ---
+    :file: Attachment File name before adding to Joplin
+    :rand_attach: Attachment file name after adding to Joplin
+    :extension: Attachment file extension
+    :now: Current date & time
     '''
 
     (extension, _) = split_file_name(file)
@@ -90,12 +92,14 @@ def write_attachment_file(file, rand_attach, now):
 def write_note_file(joplin_directory, file, rand_attach, now):
     '''
     Write note markdown file with link to attachment.
-    Inputs:
-        file: Attachment file name before adding to Joplin without extension
-        rand_md: Random markdown file name for note
-        rand_attach: Attachment file name after adding to Joplin
-        extension: Attachment file extension
-        now: Current date & time
+
+    Inputs
+    ---
+    :file: Attachment file name before adding to Joplin without extension
+    :rand_md: Random markdown file name for note
+    :rand_attach: Attachment file name after adding to Joplin
+    :extension: Attachment file extension
+    :now: Current date & time
     '''
 
     (extension, file_name) = split_file_name(file)
@@ -161,13 +165,13 @@ def main(joplin_directory, files_directory):
     # List of files
     file_list = glob.glob('*.*')
 
+    # Stop if joplin directory exists. Don't just delete since user may not have imported yet.
+    assert not os.path.isdir('joplin'), \
+        'joplin directory exists. Import it if necessary, remove it, and run again.'
+
     # Make RAW directory
-    try:
-        os.mkdir('joplin')
-        os.mkdir('joplin/resources')
-    except FileExistsError:
-        # Stop if joplin directory exists. Don't just delete since user may not have imported yet.
-        print('joplin directory exists. Import it if necessary, remove it, and run again.')
+    os.mkdir('joplin')
+    os.mkdir('joplin/resources')
 
     # Current time in Joplin format. Might use file upated times instead of just current time?
     now = datetime.now(timezone.utc).isoformat()[:23] + 'Z'
