@@ -13,6 +13,6 @@ Command line inputs:
 
 **WARNING: If you plan on editing attachments, you should check that Joplin actually syncs
 attachments after they are edited before using this. I have had problems with that in
-Joplin 1.0.175. If your attachments are not syncing after editing, an alternative would be to link
-to the files directly using file:// in front of the file paths. I may add an option for this if the
-next version of Joplin does not fix this.**
+Joplin 1.0.175 & 1.0.178. If your attachments are not syncing after editing, an alternative would be to link
+to the files directly using file:// in front of the file paths. I may add an option to use file:// links if
+Joplin does not fix the syncing of attachments.**
