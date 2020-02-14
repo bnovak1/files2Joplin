@@ -18,6 +18,7 @@ be to link to the files directly using file:// in front of the file paths. I may
 use file:// links if Joplin does not fix the syncing of attachments.**
 '''
 
+import argparse
 from datetime import datetime, timezone
 import glob
 import mimetypes
@@ -190,8 +191,16 @@ def main(joplin_directory, files_directory):
 
 if __name__ == '__main__':
 
-    # Inputs
-    JOPLIN_DIRECTORY = sys.argv[1]
-    FILES_DIRECTORY = sys.argv[2]
+    # Command line arguments
+    PARSER = argparse.ArgumentParser()
+    PARSER.add_argument('joplin_directory',
+                        help='The absolute path for the Joplin directory. It is the directory ' + \
+                             'you are syncing to, not the local directory. This is needed to ' + \
+                             'check if randomly generated file names already exist.')
+    PARSER.add_argument('files_directory',
+                        help='The absolute path for the attachment directory with the files to ' + \
+                             'add to the RAW directory.')
+    # PARSER.add_argument('-l', '--link_type', choices=['joplin', 'file'], help='Output file name.')
+    ARGS = PARSER.parse_args()
 
-    main(JOPLIN_DIRECTORY, FILES_DIRECTORY)
+    main(ARGS.joplin_directory, ARGS.files_directory)
