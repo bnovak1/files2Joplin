@@ -102,7 +102,7 @@ def write_attachment_file(file, rand_attach, now):
         fid.write('type_: 4')
 
 
-def write_note_file(joplin_directory, file, rand_attach, now):
+def write_note_file(joplin_directory, file, now, joplin_attach=None, file_attach_list=None):
     '''
     Description
     ----
@@ -110,12 +110,16 @@ def write_note_file(joplin_directory, file, rand_attach, now):
 
     Inputs
     ----
-    :file: Attachment file name before adding to Joplin without extension
+    :file: Attachment file name before adding to Joplin with extension
     :rand_md: Random markdown file name for note
-    :rand_attach: Attachment file name after adding to Joplin
-    :extension: Attachment file extension
     :now: Current date & time in Joplin format
+    :joplin_attach: Attachment file name after adding to Joplin for joplin link type.
+    :file_attach_list: List of link names and directories for file link type.
     '''
+
+    assert (not joplin_attach) + (not file_attach_list) == 1, \
+        'Must specify exactly one of joplin_attach for joplin type attachments or ' + \
+        'file_attach_list for file type attachments'
 
     (extension, file_name) = split_file_name(file)
 
@@ -126,13 +130,45 @@ def write_note_file(joplin_directory, file, rand_attach, now):
 
     with open('joplin/' + rand_md + '.md', 'w') as fid:
 
-        # Title and link to attachment.
-        # Image types which will display in Joplin are given image links.
+        # Title
         fid.write(file_name + '\n\n')
+
+        # Image types which will display in Joplin are given image links.
         if extension in ['.png', '.jpeg', '.jpg']:
-            fid.write('![' + file + '](:/' + rand_attach + ')\n\n')
+            start = '!['
         else:
-            fid.write('[' + file + '](:/' + rand_attach + ')\n\n')
+            start = '['
+
+        # Link(s) to attachment.
+        if joplin_attach:
+
+            fid.write(start + file + '](:/' + joplin_attach + ')\n\n')
+
+        else:
+
+            for attach in file_attach_list:
+
+                # Link text
+                link_name = attach[0].strip()
+
+                # Directory name
+                dir_name = attach[1].strip()
+                if '/' in dir_name and dir_name[-1] != '/':
+                    dir_name += '/'
+                if '\\' in dir_name and dir_name[-1] != '\\':
+                    dir_name += '\\'
+
+                # Make directory if it does not exist
+                if not os.path.exists(dir_name):
+                    os.mkdir(dir_name)
+
+                # Replace spaces file name for link
+                file = file.replace(' ', '%20')
+
+                # Write file link
+                fid.write(start + link_name + '](file://' + dir_name + file + ')\n')
+
+            fid.write('\n')
 
         # Other data
         fid.write('id: ' + rand_md + '\n')
@@ -169,10 +205,37 @@ def write_note_file(joplin_directory, file, rand_attach, now):
         fid.write('type_: 1')
 
 
-def main(joplin_directory, files_directory, link_type, attach_directory):
+def get_attach_dir_list(attach_dir_file):
+    '''
+    Description
+    ----
+    Read link names and directories for file for file type links
+
+    Inputs
+    ----
+    :attach_dir_file: File name
+
+    Outputs
+    ----
+    :attach_dir_list: List of lists with each sub-list containing a link name and its directory
+    '''
+
+    attach_dir_list = []
+    with open(attach_dir_file, 'r') as fid:
+        for line in fid:
+            attach_dir_list.append(line.strip().split(','))
+
+    return attach_dir_list
+
+
+def main(joplin_directory, files_directory, link_type='joplin', attach_dir_file=None):
     '''
     main
     '''
+
+    # Get attachment directory list
+    if link_type == 'file':
+        attach_dir_list = get_attach_dir_list(attach_dir_file)
 
     # Change directory
     os.chdir(files_directory)
@@ -186,7 +249,8 @@ def main(joplin_directory, files_directory, link_type, attach_directory):
 
     # Make RAW directory
     os.mkdir('joplin')
-    os.mkdir('joplin/resources')
+    if link_type == 'joplin':
+        os.mkdir('joplin/resources')
 
     # Current time in Joplin format. Might use file upated times instead of just current time?
     now = datetime.now(timezone.utc).isoformat()[:23] + 'Z'
@@ -194,14 +258,25 @@ def main(joplin_directory, files_directory, link_type, attach_directory):
     # Loop over attachment files
     for file in file_list:
 
-        # Random markdown file name for attachment
-        rand_attach = os.urandom(16).hex()
-        while os.path.exists(joplin_directory + '/' + rand_attach + '.md'):
-            rand_attach = os.urandom(16).hex()
+        if link_type == 'joplin':
 
-        # Move attachment to RAW directory. Write attachment markdown file.
-        write_attachment_file(file, rand_attach, now)
-        write_note_file(joplin_directory, file, rand_attach, now)
+            # Random markdown file name for attachment
+            rand_attach = os.urandom(16).hex()
+            while os.path.exists(joplin_directory + '/' + rand_attach + '.md'):
+                rand_attach = os.urandom(16).hex()
+
+            # Move attachment to RAW directory. Write attachment markdown file.
+            write_attachment_file(file, rand_attach, now)
+
+            # Write note file
+            write_note_file(joplin_directory, file, now, joplin_attach=rand_attach)
+
+        else:
+
+            # Move file to first directory in list
+            shutil.move(file, attach_dir_list[0][1].strip())
+
+            write_note_file(joplin_directory, file, now, file_attach_list=attach_dir_list)
 
 
 if __name__ == '__main__':
@@ -220,7 +295,7 @@ if __name__ == '__main__':
                              "to joplin_directory/.resource and use a Joplin link in the note, " + \
                              "or 'file' to copy the file to attach_directory and use a " + \
                              "file:// link in the note. Default is 'joplin'.")
-    PARSER.add_argument('-a', '--attach_dir_list', default=None,
+    PARSER.add_argument('-a', '--attach_dir_file', default=None,
                         help="File containing sets of link names, directories " \
                              "(one link name and one directory per line, comma separated) for " + \
                              "links with type 'file'. Multiple directories may be needed for " + \
@@ -232,12 +307,11 @@ if __name__ == '__main__':
                              "sub-directories of the directories Joplin is synced to on each " + \
                              "computer. Link names should identify the computers corresponding " + \
                              "to the directory names.")
-
     ARGS = PARSER.parse_args()
 
     if ARGS.link_type == 'file':
-        assert ARGS.attach_dir_list, \
-            'Name of file (attach_dir_list) with list of directories must be specified for ' + \
+        assert ARGS.attach_dir_file, \
+            'Name of file (attach_dir_file) with list of directories must be specified for ' + \
             'file link type'
 
-    main(ARGS.joplin_directory, ARGS.files_directory, ARGS.link_type, ARGS.attach_dir_list)
+    main(ARGS.joplin_directory, ARGS.files_directory, ARGS.link_type, ARGS.attach_dir_file)
