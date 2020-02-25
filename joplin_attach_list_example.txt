@@ -1,0 +1,2 @@
+linux,/home/user1/Sync/Joplin/attachments
+windows,C:\Users\user1\Sync\Joplin\attachments
