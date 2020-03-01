@@ -15,7 +15,11 @@ Required command line inputs:
 Optional command line inputs:
 1) -l or --link_type. Type of link for attachments. Either 'joplin' to add the file to
    joplin_directory/.resource and use a Joplin link in the note, or 'file' to copy the file to
-   attach_directory and use a file:// link(s) in the note. Default is 'joplin'.
+   attach_directory and use a file:// link(s) in the note. Default is 'joplin'. Note that Joplin
+   currently does not sync attachments that it manages ('joplin' type links).
+   See https://github.com/laurent22/joplin/issues/279. If you know you will want to edit the
+   attachments, you probably currently want to use the 'file' type links. However, be aware that the
+   files will not be managed by Joplin and therefore not encrypted by Joplin.
 2) -a or --attach_dir_file. File containing sets of link names, absolute paths for directories
    (one link name and one directory per line, comma separated) for links with type 'file'.
    Multiple directories may be needed for multiple computers, particularly for different OSs.
