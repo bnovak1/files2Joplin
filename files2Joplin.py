@@ -159,6 +159,11 @@ def write_note_file(joplin_directory, file, now, joplin_attach=None, file_attach
 
         else:
 
+            # Make directory if it does not exist
+            dir_name = file_attach_list[0][1].strip()
+            if not os.path.exists(dir_name):
+                os.mkdir(dir_name)
+
             for attach in file_attach_list:
 
                 # Link text
@@ -170,10 +175,6 @@ def write_note_file(joplin_directory, file, now, joplin_attach=None, file_attach
                     dir_name += '/'
                 if '\\' in dir_name and dir_name[-1] != '\\':
                     dir_name += '\\'
-
-                # Make directory if it does not exist
-                if not os.path.exists(dir_name):
-                    os.mkdir(dir_name)
 
                 # Replace spaces file name for link
                 file = file.replace(' ', '%20')
@@ -287,7 +288,21 @@ def main(joplin_directory, files_directory, link_type='joplin', attach_dir_file=
         else:
 
             # Move file to first directory in list
-            shutil.move(file, attach_dir_list[0][1].strip())
+            # Rename if there is a file with the same name in that directory
+            file_split = file.split('.')
+            file_prefix = '.'.join(file_split[:-1])
+            file_ext = file_split[-1]
+            directory = attach_dir_list[0][1].strip()
+            file_path = directory + '/' + file
+            cnt = 1
+            while os.path.exists(file_path):
+                file_new = file_prefix + '_' + str(cnt) + '.' + file_ext
+                file_path = directory + '/' + file_new
+                cnt += 1
+            shutil.move(file, file_path)
+
+            if file_new:
+                file = file_new
 
             write_note_file(joplin_directory, file, now, file_attach_list=attach_dir_list)
 
