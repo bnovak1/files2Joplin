@@ -83,10 +83,11 @@ def write_attachment_file(file, rand_attach, now):
     file_size = os.path.getsize(file)
 
     # Move file
-    shutil.move(file, 'joplin/resources/' + rand_attach)
+    shutil.move(file, os.path.join('joplin', 'resources') + rand_attach)
 
     # Write markdown file
-    with open('joplin/' + rand_attach + '.md', 'w') as fid:
+    f = os.path.join('joplin', rand_attach + '.md')
+    with open(f, 'w') as fid:
 
         fid.write(file + '\n\n')
         fid.write('id: ' + rand_attach + '\n')
@@ -138,10 +139,12 @@ def write_note_file(joplin_directory, file, now, joplin_attach=None, file_attach
 
     # Random markdown file name
     rand_md = os.urandom(16).hex()
-    while os.path.exists(joplin_directory + '/' + rand_md + '.md'):
+    f = os.path.join(joplin_directory, rand_md + '.md')
+    while os.path.exists(f):
         rand_md = os.urandom(16).hex()
 
-    with open('joplin/' + rand_md + '.md', 'w') as fid:
+    f = os.path.join('joplin', rand_md + '.md')
+    with open(f, 'w') as fid:
 
         # Title
         fid.write(file_name + '\n\n')
@@ -171,16 +174,13 @@ def write_note_file(joplin_directory, file, now, joplin_attach=None, file_attach
 
                 # Directory name
                 dir_name = attach[1].strip()
-                if '/' in dir_name and dir_name[-1] != '/':
-                    dir_name += '/'
-                if '\\' in dir_name and dir_name[-1] != '\\':
-                    dir_name += '\\'
 
                 # Replace spaces file name for link
                 file = file.replace(' ', '%20')
 
                 # Write file link
-                fid.write(start + link_name + '](file://' + dir_name + file + ')\n')
+                f = os.path.join(dir_name, file)
+                fid.write(start + link_name + '](file://' + f + ')\n')
 
             fid.write('\n')
 
@@ -264,7 +264,8 @@ def main(joplin_directory, files_directory, link_type='joplin', attach_dir_file=
     # Make RAW directory
     os.mkdir('joplin')
     if link_type == 'joplin':
-        os.mkdir('joplin/resources')
+        dir = os.path.join('joplin', 'resources')
+        os.mkdir(dir)
 
     # Current time in Joplin format. Might use file upated times instead of just current time?
     now = datetime.now(timezone.utc).isoformat()[:23] + 'Z'
@@ -276,7 +277,8 @@ def main(joplin_directory, files_directory, link_type='joplin', attach_dir_file=
 
             # Random markdown file name for attachment
             rand_attach = os.urandom(16).hex()
-            while os.path.exists(joplin_directory + '/' + rand_attach + '.md'):
+            f = os.path.join(joplin_directory, rand_attach + '.md')
+            while os.path.exists(f):
                 rand_attach = os.urandom(16).hex()
 
             # Move attachment to RAW directory. Write attachment markdown file.
@@ -293,11 +295,12 @@ def main(joplin_directory, files_directory, link_type='joplin', attach_dir_file=
             file_prefix = '.'.join(file_split[:-1])
             file_ext = file_split[-1]
             directory = attach_dir_list[0][1].strip()
-            file_path = directory + '/' + file
+            file_path = os.path.join(directory, file)
             cnt = 1
+            import pdb; pdb.set_trace()
             while os.path.exists(file_path):
                 file_new = file_prefix + '_' + str(cnt) + '.' + file_ext
-                file_path = directory + '/' + file_new
+                file_path = os.path.join(directory, file_new)
                 cnt += 1
             shutil.move(file, file_path)
 
